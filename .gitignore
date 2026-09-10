@@ -1,4 +1,6 @@
-node_modules/
+client/.gitignore
 dist/
-.env
 .DS_Store
+.env
+Full_Stack_Intern_Assignment_9D17EED734.pdf
+node_modules/
