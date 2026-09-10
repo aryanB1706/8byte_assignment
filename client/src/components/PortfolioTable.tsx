@@ -25,9 +25,29 @@ function fmtMoney(n: number | string) {
 
 interface Props {
   holdings: Stock[]
+  onRetry?: () => void
 }
 
-function PortfolioTable({ holdings }: Props) {
+function RetryCell({ value, onRetry }: { value: string | number; onRetry?: () => void }) {
+  const isNA = value === 'N/A'
+  if (!isNA) return <span className="font-semibold">{`₹${(value as number).toLocaleString('en-IN')}`}</span>
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className="text-slate-400">—</span>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="text-[11px] px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border font-medium"
+          title="Retry live CMP fetch"
+        >
+          ↻ Retry
+        </button>
+      )}
+    </span>
+  )
+}
+
+function PortfolioTable({ holdings, onRetry }: Props) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState('')
 
@@ -53,19 +73,23 @@ function PortfolioTable({ holdings }: Props) {
       col.accessor('exchange', { header: 'NSE/BSE', cell: (info) => <span className="text-xs">{info.getValue()}</span> }),
       col.accessor('cmp', {
         header: 'CMP',
-        cell: (info) => <span className="font-semibold">{fmtMoney(info.getValue() as string | number)}</span>,
+        cell: (info) => <RetryCell value={info.getValue() as string | number} onRetry={onRetry} />,
       }),
       col.accessor('presentValue', {
         header: 'Present Value',
-        cell: (info) => fmtMoney(info.getValue() as string | number),
+        cell: (info) => {
+          const v = info.getValue() as string | number
+          if (v === 'N/A') return <span className="inline-flex items-center gap-2"><span className="text-slate-400">—</span>{onRetry && <button onClick={onRetry} className="text-[11px] px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border font-medium">↻ Retry</button>}</span>
+          return fmtMoney(v)
+        },
       }),
       col.accessor('gainLoss', {
         header: 'Gain/Loss',
         cell: (info) => {
           const v = info.getValue() as string | number
-          const isNA = v === 'N/A'
+          if (v === 'N/A') return <span className="inline-flex items-center gap-2"><span className="text-slate-400">—</span>{onRetry && <button onClick={onRetry} className="text-[11px] px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border font-medium">↻ Retry</button>}</span>
           const isGain = typeof v === 'number' ? v >= 0 : false
-          return <span className={`font-bold ${isNA ? 'text-slate-400' : isGain ? 'text-green-600' : 'text-red-600'}`}>{fmtMoney(v)}</span>
+          return <span className={`font-bold ${isGain ? 'text-green-600' : 'text-red-600'}`}>{fmtMoney(v)}</span>
         },
       }),
       col.accessor('peRatio', {
@@ -95,7 +119,7 @@ function PortfolioTable({ holdings }: Props) {
         },
       }),
     ],
-    []
+    [onRetry]
   )
 
   const table = useReactTable({
