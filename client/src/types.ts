@@ -7,10 +7,10 @@ export interface Stock {
   sector: string;
   investment: number;
   portfolioPercent: number;
-  cmp: number;
-  presentValue: number;
-  gainLoss: number;
-  peRatio: number;
+  cmp: number | string;
+  presentValue: number | string;
+  gainLoss: number | string;
+  peRatio: number | string;
   latestEarnings: string;
 }
 
