@@ -11,7 +11,9 @@ export interface Stock {
   presentValue: number | string;
   gainLoss: number | string;
   peRatio: number | string;
+  peSource?: 'live' | 'mock';
   latestEarnings: string;
+  earningsSource?: 'live' | 'mock';
 }
 
 export interface SectorInfo {

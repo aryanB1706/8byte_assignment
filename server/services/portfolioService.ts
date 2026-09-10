@@ -12,8 +12,8 @@ export async function getPortfolioData() {
 
   const holdings = await Promise.all(withInv.map(async (p) => {
     const cmp = await fetchCMP(p.exchange);
-    const pe = await fetchPE(p.exchange);
-    const earnings = await fetchEarnings(p.exchange);
+    const peRes = await fetchPE(p.exchange);
+    const earnRes = await fetchEarnings(p.exchange);
 
     const isNA = cmp === "N/A";
     const presentValue = isNA ? "N/A" : Number((Number(cmp) * p.qty).toFixed(2));
@@ -27,8 +27,10 @@ export async function getPortfolioData() {
       cmp,
       presentValue,
       gainLoss,
-      peRatio: pe,
-      latestEarnings: earnings
+      peRatio: peRes.value,
+      peSource: peRes.source,
+      latestEarnings: earnRes.value,
+      earningsSource: earnRes.source
     };
   }));
 

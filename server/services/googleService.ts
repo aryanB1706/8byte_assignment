@@ -20,7 +20,7 @@ function mockEarnings(exchange: string): string {
   return `${quarter} FY${String(year).slice(-2)}: ₹${val} Cr (EPS ${eps})`;
 }
 
-export async function fetchPE(exchange: string) {
+export async function fetchPE(exchange: string): Promise<{ value: string; source: 'live' | 'mock' }> {
   const gExchange = exchange.startsWith('NSE:') ? 'NSE' : 'BOM';
   const gTicker = exchange.startsWith('NSE:') ? exchange.replace('NSE:', '').trim() : exchange.trim();
   const url = `https://www.google.com/finance/quote/${gTicker}:${gExchange}`;
@@ -43,7 +43,7 @@ export async function fetchPE(exchange: string) {
       const m = html.match(re);
       if (m) {
         const val = parseFloat(m[1]);
-        if (val >= 5 && val <= 100) return m[1]; // validate realistic P/E range
+        if (val >= 5 && val <= 100) return { value: m[1], source: 'live' };
       }
     }
   } catch (e) {
@@ -62,16 +62,16 @@ export async function fetchPE(exchange: string) {
       const m2 = html2.match(/PE Ratio[^0-9]*([0-9.]+)/i) || html2.match(/trailingPE[^0-9]*([0-9.]+)/i);
       if (m2) {
         const v = parseFloat(m2[1]);
-        if (v >= 5 && v <= 100) return m2[1];
+        if (v >= 5 && v <= 100) return { value: m2[1], source: 'live' };
       }
     } catch {}
   }
 
   // Final fallback: deterministic mock (avoids N/A column per assignment's scraping disclaimer)
-  return mockPE(exchange);
+  return { value: mockPE(exchange), source: 'mock' };
 }
 
-export async function fetchEarnings(exchange: string) {
+export async function fetchEarnings(exchange: string): Promise<{ value: string; source: 'live' | 'mock' }> {
   const gExchange = exchange.startsWith('NSE:') ? 'NSE' : 'BOM';
   const gTicker = exchange.startsWith('NSE:') ? exchange.replace('NSE:', '').trim() : exchange.trim();
   const url = `https://www.google.com/finance/quote/${gTicker}:${gExchange}`;
@@ -97,9 +97,9 @@ export async function fetchEarnings(exchange: string) {
       if (m) {
         // return compact earnings string
         const val = m[1].replace(/,/g, '');
-        if (re.source.includes('Net income')) return `Net: ₹${val} Cr`;
-        if (re.source.includes('EPS') || re.source.includes('eps')) return `EPS ${val}`;
-        return m[1];
+        if (re.source.includes('Net income')) return { value: `Net: ₹${val} Cr`, source: 'live' };
+        if (re.source.includes('EPS') || re.source.includes('eps')) return { value: `EPS ${val}`, source: 'live' };
+        return { value: m[1], source: 'live' };
       }
     }
     // If page loaded but no pattern matched, still consider page valid - fall through to mock rather than N/A
@@ -119,10 +119,10 @@ export async function fetchEarnings(exchange: string) {
       const m2 = html2.match(/EPS[^0-9]*([0-9]+\.[0-9]+)/i);
       if (m2) {
         const v = parseFloat(m2[1]);
-        if (v >= 1 && v <= 100) return `EPS ${m2[1]}`;
+        if (v >= 1 && v <= 100) return { value: `EPS ${m2[1]}`, source: 'live' };
       }
     } catch {}
   }
 
-  return mockEarnings(exchange);
+  return { value: mockEarnings(exchange), source: 'mock' };
 }

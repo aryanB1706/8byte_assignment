@@ -68,10 +68,31 @@ function PortfolioTable({ holdings }: Props) {
           return <span className={`font-bold ${isNA ? 'text-slate-400' : isGain ? 'text-green-600' : 'text-red-600'}`}>{fmtMoney(v)}</span>
         },
       }),
-      col.accessor('peRatio', { header: 'P/E Ratio', cell: (info) => fmt(info.getValue() as string | number) }),
+      col.accessor('peRatio', {
+        header: 'P/E Ratio',
+        cell: (info) => {
+          const v = info.getValue() as string | number
+          const src = (info.row.original as Stock).peSource
+          return (
+            <span className="inline-flex items-center gap-1.5">
+              {fmt(v)}
+              {src && <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${src === 'live' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{src === 'live' ? 'Live' : 'Fallback'}</span>}
+            </span>
+          )
+        },
+      }),
       col.accessor('latestEarnings', {
         header: 'Latest Earnings',
-        cell: (info) => <span className="whitespace-nowrap">{info.getValue() ?? 'N/A'}</span>,
+        cell: (info) => {
+          const v = info.getValue() as string
+          const src = (info.row.original as Stock).earningsSource
+          return (
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+              {v ?? 'N/A'}
+              {src && <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${src === 'live' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{src === 'live' ? 'Live' : 'Fallback'}</span>}
+            </span>
+          )
+        },
       }),
     ],
     []

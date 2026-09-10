@@ -24,7 +24,7 @@ function App() {
       <div className="max-w-7xl mx-auto px-4 pb-10">
         <PortfolioTable holdings={holdings} />
         <p className="text-xs text-slate-400 mt-2">
-          * CMP, P/E, Earnings — Live via Yahoo/Google Finance strategy (15s cache + refresh). Falls back to N/A on rate-limit.
+          * CMP live via Yahoo Finance (query1 API) • P/E & Earnings via Google Finance scraping. <span className="inline-flex items-center gap-1"><span className="bg-green-100 text-green-700 text-[10px] px-1 rounded">Live</span> = scraped live</span> <span className="inline-flex items-center gap-1"><span className="bg-amber-100 text-amber-700 text-[10px] px-1 rounded">Fallback</span> = deterministic mock on rate-limit/block (disclosed per PDF Data Accuracy note)</span> • 15s cache+refresh
         </p>
       </div>
     </div>
