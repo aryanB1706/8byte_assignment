@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/server/index.ts" },
+    { "source": "/(.*)", "destination": "/client/dist/$1" }
+  ],
+  "buildCommand": "cd client && npm install && npm run build && cd ../server && npm install && npm run build",
+  "outputDirectory": "client/dist",
+  "functions": {
+    "server/index.ts": {
+      "includeFiles": "server/**"
+    }
+  }
+}

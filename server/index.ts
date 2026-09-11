@@ -15,6 +15,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server running with TypeScript' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+// For Vercel serverless, export app; locally, listen
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
