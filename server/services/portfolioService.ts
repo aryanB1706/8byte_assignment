@@ -85,18 +85,19 @@ export async function getPortfolioData() {
       cmp,
       presentValue,
       gainLoss,
-      peRatio: (peRes as any)?.value ?? "N/A",
-      peSource: (peRes as any)?.source ?? "mock",
-      latestEarnings: (earnRes as any)?.value ?? "N/A",
-      earningsSource: (earnRes as any)?.source ?? "mock",
+      peRatio: peRes?.value ?? "N/A",
+      peSource: peRes?.source ?? "mock",
+      latestEarnings: earnRes?.value ?? "N/A",
+      earningsSource: earnRes?.source ?? "mock",
     };
   });
 
   const holdings = await runWithLimit(tasks, 8); // 8 concurrent stocks = ~12s for 29 stocks (vs 87 parallel before)
 
-  // sector grouping
-  const sectors: any = {};
-  holdings.forEach((h: any) => {
+  // sector grouping - proper types (was any)
+  type SectorAgg = { stocks: typeof holdings[number][]; totalInvestment: number; totalPresentValue: number; totalGainLoss: number };
+  const sectors: Record<string, SectorAgg> = {};
+  holdings.forEach((h) => {
     if (!h) return;
     if (!sectors[h.sector]) {
       sectors[h.sector] = { stocks: [], totalInvestment: 0, totalPresentValue: 0, totalGainLoss: 0 };
@@ -113,7 +114,7 @@ export async function getPortfolioData() {
     s.totalPresentValue = Number(s.totalPresentValue.toFixed(2));
   });
 
-  const totalPresentValue = holdings.reduce((a: number, b: any) => a + (b && typeof b.presentValue === 'number' ? b.presentValue : 0), 0);
+  const totalPresentValue = holdings.reduce((a, b) => a + (b && typeof b.presentValue === 'number' ? b.presentValue : 0), 0);
   const summary = {
     totalInvestment: Number(totalInv.toFixed(2)),
     totalPresentValue: Number(totalPresentValue.toFixed(2)),
@@ -124,7 +125,7 @@ export async function getPortfolioData() {
 }
 
 // simple in-memory cache 15 sec for full portfolio (reduces 87 -> 0 calls on rapid refresh)
-let cache: any = null;
+let cache: Awaited<ReturnType<typeof getPortfolioData>> | null = null;
 let cacheTime = 0;
 
 export async function getCachedPortfolio() {

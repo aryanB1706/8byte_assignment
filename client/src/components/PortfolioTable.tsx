@@ -9,19 +9,9 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import type { Stock } from '../types'
+import { fmt, fmtMoney } from '../utils/format'
 
 const col = createColumnHelper<Stock>()
-
-function fmt(n: number | string) {
-  if (n === 'N/A' || n === null || n === undefined) return 'N/A'
-  if (typeof n === 'string') return n
-  return n.toLocaleString('en-IN')
-}
-function fmtMoney(n: number | string) {
-  if (n === 'N/A') return 'N/A'
-  if (typeof n === 'string') return n
-  return `₹${n.toLocaleString('en-IN')}`
-}
 
 interface Props {
   holdings: Stock[]

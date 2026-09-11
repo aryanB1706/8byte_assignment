@@ -6,7 +6,7 @@ export async function getPortfolio(req: Request, res: Response) {
     const data = await getCachedPortfolio();
     res.json(data);
   } catch (err) {
-    console.log(err);
+    console.error('[portfolio] fetch failed:', err);
     res.status(500).json({ error: 'failed to fetch portfolio' });
   }
 }
@@ -16,6 +16,7 @@ export async function refresh(req: Request, res: Response) {
     const data = await refreshPortfolio();
     res.json(data);
   } catch (err) {
+    console.error('[portfolio] refresh failed:', err);
     res.status(500).json({ error: 'failed to refresh' });
   }
 }
