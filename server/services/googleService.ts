@@ -6,6 +6,20 @@ function toYahooTicker(exchange: string): string | null {
   return null;
 }
 
+// yahoo-finance2 live attempt (best for NSE tickers, per test 6/29 PE live, better than pure scraping)
+let yfInstance: any = null;
+async function getYahooFinance() {
+  if (yfInstance) return yfInstance;
+  try {
+    const mod: any = await import('yahoo-finance2');
+    const YahooFinance = mod.default;
+    yfInstance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+    return yfInstance;
+  } catch {
+    return null;
+  }
+}
+
 // deterministic mock fallback so column never stays N/A (acknowledges scraping fragility)
 function mockPE(exchange: string): string {
   const seed = exchange.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -21,6 +35,19 @@ function mockEarnings(exchange: string): string {
 }
 
 export async function fetchPE(exchange: string): Promise<{ value: string; source: 'live' | 'mock' }> {
+  // 1) Try yahoo-finance2 first (most reliable for NSE, per local test 6/29 PE live)
+  const yTickerPrimary = toYahooTicker(exchange);
+  if (yTickerPrimary) {
+    try {
+      const yf = await getYahooFinance();
+      if (yf) {
+        const q: any = await yf.quote(yTickerPrimary);
+        const pe = q?.trailingPE;
+        if (typeof pe === 'number' && pe >= 5 && pe <= 200) return { value: pe.toFixed(1), source: 'live' };
+      }
+    } catch {}
+  }
+
   const gExchange = exchange.startsWith('NSE:') ? 'NSE' : 'BOM';
   const gTicker = exchange.startsWith('NSE:') ? exchange.replace('NSE:', '').trim() : exchange.trim();
   const url = `https://www.google.com/finance/quote/${gTicker}:${gExchange}`;
@@ -50,7 +77,7 @@ export async function fetchPE(exchange: string): Promise<{ value: string; source
     // fall through to Yahoo / mock
   }
 
-  // Try Yahoo as fallback for P/E
+  // Try Yahoo HTML scraping as secondary fallback
   const yTicker = toYahooTicker(exchange);
   if (yTicker) {
     try {
@@ -72,6 +99,19 @@ export async function fetchPE(exchange: string): Promise<{ value: string; source
 }
 
 export async function fetchEarnings(exchange: string): Promise<{ value: string; source: 'live' | 'mock' }> {
+  // 1) Try yahoo-finance2 first for EPS
+  const yTickerPrimary2 = toYahooTicker(exchange);
+  if (yTickerPrimary2) {
+    try {
+      const yf = await getYahooFinance();
+      if (yf) {
+        const q: any = await yf.quote(yTickerPrimary2);
+        const eps = q?.epsTrailingTwelveMonths;
+        if (typeof eps === 'number' && eps !== 0 && eps >= -50 && eps <= 200) return { value: `EPS ${eps.toFixed(2)}`, source: 'live' };
+      }
+    } catch {}
+  }
+
   const gExchange = exchange.startsWith('NSE:') ? 'NSE' : 'BOM';
   const gTicker = exchange.startsWith('NSE:') ? exchange.replace('NSE:', '').trim() : exchange.trim();
   const url = `https://www.google.com/finance/quote/${gTicker}:${gExchange}`;
